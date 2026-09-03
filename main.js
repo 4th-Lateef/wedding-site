@@ -8,7 +8,8 @@ const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add('in-view');
-      revealObserver.unobserve(entry.target);
+    } else {
+      entry.target.classList.remove('in-view');
     }
   });
 }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
@@ -42,6 +43,37 @@ revealGroup('.rsvp-grid');
 
 revealEach('.section .eyebrow, .section .section-title, .section-sub');
 revealEach('.story-text, .guestbook-form, .directions-info, .map-embed');
+
+// ---------- Smooth scroll for in-page anchor links ----------
+function smoothScrollTo(targetY, duration = 900) {
+  const startY = window.scrollY;
+  const distance = targetY - startY;
+  const startTime = performance.now();
+
+  function easeInOutQuad(t) {
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  }
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    window.scrollTo(0, startY + distance * easeInOutQuad(progress));
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    const id = link.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    const navHeight = document.getElementById('siteNav')?.offsetHeight || 0;
+    const targetY = target.getBoundingClientRect().top + window.scrollY - navHeight - 12;
+    smoothScrollTo(targetY);
+  });
+});
 
 // ---------- Mobile nav toggle ----------
 const navToggle = document.getElementById('navToggle');
@@ -164,8 +196,8 @@ const wishesNext = document.getElementById('wishesNext');
 let currentPage = 0;
 
 function getPerView() {
-  if (window.innerWidth < 420) return 2;
-  if (window.innerWidth < 700) return 3;
+  if (window.innerWidth < 700) return 1;
+  if (window.innerWidth < 1000) return 2;
   return 4;
 }
 
