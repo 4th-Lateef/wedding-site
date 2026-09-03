@@ -675,8 +675,22 @@ body {
 }
 .wishes-track {
   display: flex;
-  gap: 20px;
-  transition: transform 0.45s ease;
+  transition: transform 0.5s ease;
+}
+.wishes-page {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+.wishes-page-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  padding: 0 2px;
+}
+@media (min-width: 1000px) {
+  .wishes-page-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 .carousel-arrow {
   flex: 0 0 auto;
@@ -714,7 +728,6 @@ body {
 .wishes-dot.active { opacity: 1; background: var(--color-blush); width: 22px; border-radius: 5px; }
 
 .wish-card {
-  flex: 0 0 auto;
   background: var(--color-bg);
   border-left: 3px solid var(--color-blush);
   border-radius: 10px;
@@ -736,7 +749,7 @@ body {
   .wish-message {
     font-size: 0.82rem;
     display: -webkit-box;
-    -webkit-line-clamp: 4;
+    -webkit-line-clamp: 5;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
