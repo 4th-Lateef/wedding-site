@@ -104,7 +104,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLight
 //    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 // ============================================================
 
-const SUPABASE_URL = 'https://cyozplmtpemuwqtnavec.supabase.co/rest/v1/';
+const SUPABASE_URL = 'https://cyozplmtpemuwqtnavec.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_-3fUSsjqrv1bXOJVoJyNeg_-PHkqAcJ';
 
 let supabaseClient = null;
