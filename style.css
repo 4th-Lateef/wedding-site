@@ -28,6 +28,18 @@ html { scroll-behavior: smooth; }
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
+/* ============ SCROLL REVEAL ============ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition-delay: var(--reveal-delay, 0s);
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 body {
   font-family: var(--font-body);
   color: var(--color-text);
@@ -175,16 +187,29 @@ body {
 @media (max-width: 820px) {
   .nav-toggle { display: flex; }
   .nav-links {
-    display: none;
+    display: flex;
+    flex-direction: column;
     position: absolute;
     top: 100%; left: 0; right: 0;
     background: var(--color-bg);
-    flex-direction: column;
-    padding: 20px 24px 28px;
+    padding: 0 24px;
     gap: 18px;
     border-bottom: 1px solid rgba(58,50,44,0.08);
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-10px);
+    overflow: hidden;
+    pointer-events: none;
+    transition: max-height 0.45s ease, opacity 0.35s ease,
+                transform 0.35s ease, padding 0.45s ease;
   }
-  .nav-links.open { display: flex; }
+  .nav-links.open {
+    max-height: 500px;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    padding: 20px 24px 28px;
+  }
 }
 
 /* ============ HERO ============ */
@@ -703,6 +728,18 @@ body {
 }
 .wish-message { color: var(--color-text-soft); font-size: 0.92rem; }
 .wishes-empty { text-align: center; color: var(--color-text-soft); font-style: italic; width: 100%; padding: 20px 0; }
+
+@media (max-width: 700px) {
+  .wish-card { padding: 14px; border-radius: 8px; }
+  .wish-name { font-size: 0.95rem; margin-bottom: 4px; }
+  .wish-message {
+    font-size: 0.82rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
 
 /* ============ WEDDING PARTY ============ */
 .party-group { margin-bottom: 48px; }
