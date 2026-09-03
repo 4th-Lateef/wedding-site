@@ -1,6 +1,47 @@
 // ============================================================
 // WEDDING SITE — main.js
 // ============================================================
+// ============================================================
+// SCROLL REVEAL — fade/slide elements into view as you scroll
+// ============================================================
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+function observeReveal(el, delay = 0) {
+  el.classList.add('reveal');
+  el.style.setProperty('--reveal-delay', `${delay}s`);
+  revealObserver.observe(el);
+}
+
+// Reveal grouped items (cards in a grid/list) with a gentle stagger
+function revealGroup(selector, stagger = 0.08) {
+  document.querySelectorAll(selector).forEach(group => {
+    Array.from(group.children).forEach((el, i) => observeReveal(el, i * stagger));
+  });
+}
+
+// Reveal standalone elements (headings, single blocks) with no stagger
+function revealEach(selector) {
+  document.querySelectorAll(selector).forEach(el => observeReveal(el));
+}
+
+revealGroup('.timeline');
+revealGroup('.couple-grid');
+revealGroup('.details-grid');
+revealGroup('.menu-grid');
+revealGroup('#galleryGrid');
+revealGroup('.party-grid');
+revealGroup('.programme-list', 0.06);
+revealGroup('.rsvp-grid');
+
+revealEach('.section .eyebrow, .section .section-title, .section-sub');
+revealEach('.story-text, .guestbook-form, .directions-info, .map-embed');
 
 // ---------- Mobile nav toggle ----------
 const navToggle = document.getElementById('navToggle');
@@ -123,8 +164,8 @@ const wishesNext = document.getElementById('wishesNext');
 let currentPage = 0;
 
 function getPerView() {
-  if (window.innerWidth < 640) return 1;
-  if (window.innerWidth < 1000) return 2;
+  if (window.innerWidth < 420) return 2;
+  if (window.innerWidth < 700) return 3;
   return 4;
 }
 
@@ -180,6 +221,7 @@ function renderWish(name, message) {
   card.appendChild(nameEl);
   card.appendChild(msgEl);
   wishesTrack.prepend(card);
+  observeReveal(card);
   currentPage = 0; // jump to first page so the newest wish is visible
   updateCarousel();
 }
@@ -190,7 +232,7 @@ async function loadWishes() {
     .from('wishes')
     .select('name, message')
     .order('created_at', { ascending: false })
-    .limit(30);
+    .limit(50);
   if (error) { console.error(error); updateCarousel(); return; }
   if (data && data.length) {
     wishesEmpty?.remove();
