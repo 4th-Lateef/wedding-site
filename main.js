@@ -45,9 +45,10 @@ revealEach('.section .eyebrow, .section .section-title, .section-sub');
 revealEach('.story-text, .guestbook-form, .directions-info, .map-embed');
 
 // ---------- Smooth scroll for in-page anchor links ----------
-function smoothScrollTo(targetY, duration = 900) {
+function smoothScrollTo(targetY) {
   const startY = window.scrollY;
   const distance = targetY - startY;
+  const duration = Math.min(1800, Math.max(900, Math.abs(distance) * 1.1));
   const startTime = performance.now();
 
   function easeInOutQuad(t) {
@@ -193,55 +194,11 @@ const wishesDots = document.getElementById('wishesDots');
 const wishesPrev = document.getElementById('wishesPrev');
 const wishesNext = document.getElementById('wishesNext');
 
+let wishesData = [];
 let currentPage = 0;
+const WISHES_PER_PAGE = 4;
 
-function getPerView() {
-  if (window.innerWidth < 700) return 1;
-  if (window.innerWidth < 1000) return 2;
-  return 4;
-}
-
-function updateCarousel() {
-  const cards = Array.from(wishesTrack.children).filter(c => c.classList.contains('wish-card'));
-  const wrap = document.querySelector('.wishes-carousel-wrap');
-  const perView = getPerView();
-  const gap = 20;
-  const containerWidth = wrap.querySelector('.wishes-carousel').clientWidth;
-  const cardWidth = (containerWidth - gap * (perView - 1)) / perView;
-
-  cards.forEach(c => { c.style.width = cardWidth + 'px'; });
-
-  const totalPages = Math.max(1, Math.ceil(cards.length / perView));
-  currentPage = Math.min(currentPage, totalPages - 1);
-  const pageWidth = (cardWidth + gap) * perView;
-  wishesTrack.style.transform = `translateX(-${currentPage * pageWidth}px)`;
-
-  // Dots
-  wishesDots.innerHTML = '';
-  if (totalPages > 1) {
-    for (let i = 0; i < totalPages; i++) {
-      const dot = document.createElement('button');
-      dot.className = 'wishes-dot' + (i === currentPage ? ' active' : '');
-      dot.setAttribute('aria-label', `Go to wishes page ${i + 1}`);
-      dot.addEventListener('click', () => { currentPage = i; updateCarousel(); });
-      wishesDots.appendChild(dot);
-    }
-  }
-
-  // Arrows
-  wishesPrev.disabled = currentPage === 0;
-  wishesNext.disabled = currentPage >= totalPages - 1;
-  const showControls = cards.length > perView;
-  wishesPrev.style.visibility = showControls ? 'visible' : 'hidden';
-  wishesNext.style.visibility = showControls ? 'visible' : 'hidden';
-}
-
-wishesPrev?.addEventListener('click', () => { currentPage = Math.max(0, currentPage - 1); updateCarousel(); });
-wishesNext?.addEventListener('click', () => { currentPage += 1; updateCarousel(); });
-window.addEventListener('resize', () => updateCarousel());
-
-function renderWish(name, message) {
-  if (wishesEmpty) wishesEmpty.remove();
+function buildWishCard(name, message) {
   const card = document.createElement('div');
   card.className = 'wish-card';
   const nameEl = document.createElement('p');
@@ -252,26 +209,82 @@ function renderWish(name, message) {
   msgEl.textContent = message;
   card.appendChild(nameEl);
   card.appendChild(msgEl);
-  wishesTrack.prepend(card);
-  observeReveal(card);
+  return card;
+}
+
+function renderWishesCarousel() {
+  wishesTrack.innerHTML = '';
+
+  if (wishesData.length === 0) {
+    if (wishesEmpty) wishesTrack.appendChild(wishesEmpty);
+    wishesTrack.style.transform = 'translateX(0)';
+    wishesDots.innerHTML = '';
+    wishesPrev.style.visibility = 'hidden';
+    wishesNext.style.visibility = 'hidden';
+    return;
+  }
+
+  const totalPages = Math.ceil(wishesData.length / WISHES_PER_PAGE);
+  currentPage = Math.min(currentPage, totalPages - 1);
+
+  for (let p = 0; p < totalPages; p++) {
+    const pageEl = document.createElement('div');
+    pageEl.className = 'wishes-page';
+    const grid = document.createElement('div');
+    grid.className = 'wishes-page-grid';
+    wishesData
+      .slice(p * WISHES_PER_PAGE, p * WISHES_PER_PAGE + WISHES_PER_PAGE)
+      .forEach(w => grid.appendChild(buildWishCard(w.name, w.message)));
+    pageEl.appendChild(grid);
+    wishesTrack.appendChild(pageEl);
+  }
+
+  wishesTrack.style.transform = `translateX(-${currentPage * 100}%)`;
+
+  wishesDots.innerHTML = '';
+  if (totalPages > 1) {
+    for (let i = 0; i < totalPages; i++) {
+      const dot = document.createElement('button');
+      dot.className = 'wishes-dot' + (i === currentPage ? ' active' : '');
+      dot.setAttribute('aria-label', `Go to wishes page ${i + 1}`);
+      dot.addEventListener('click', () => { currentPage = i; renderWishesCarousel(); });
+      wishesDots.appendChild(dot);
+    }
+  }
+
+  wishesPrev.disabled = currentPage === 0;
+  wishesNext.disabled = currentPage >= totalPages - 1;
+  const showControls = totalPages > 1;
+  wishesPrev.style.visibility = showControls ? 'visible' : 'hidden';
+  wishesNext.style.visibility = showControls ? 'visible' : 'hidden';
+}
+
+wishesPrev?.addEventListener('click', () => {
+  currentPage = Math.max(0, currentPage - 1);
+  renderWishesCarousel();
+});
+wishesNext?.addEventListener('click', () => {
+  const totalPages = Math.ceil(wishesData.length / WISHES_PER_PAGE);
+  currentPage = Math.min(totalPages - 1, currentPage + 1);
+  renderWishesCarousel();
+});
+
+function renderWish(name, message) {
+  wishesData.unshift({ name, message });
   currentPage = 0; // jump to first page so the newest wish is visible
-  updateCarousel();
+  renderWishesCarousel();
 }
 
 async function loadWishes() {
-  if (!supabaseClient) { updateCarousel(); return; } // No backend configured yet — form still works locally below.
+  if (!supabaseClient) { renderWishesCarousel(); return; } // No backend configured yet — form still works locally below.
   const { data, error } = await supabaseClient
     .from('wishes')
     .select('name, message')
     .order('created_at', { ascending: false })
     .limit(50);
-  if (error) { console.error(error); updateCarousel(); return; }
-  if (data && data.length) {
-    wishesEmpty?.remove();
-    data.forEach(w => renderWish(w.name, w.message));
-  } else {
-    updateCarousel();
-  }
+  if (error) { console.error(error); renderWishesCarousel(); return; }
+  wishesData = data || [];
+  renderWishesCarousel();
 }
 loadWishes();
 
