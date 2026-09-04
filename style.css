@@ -709,6 +709,22 @@ body {
 .carousel-arrow:hover:not(:disabled) { background: var(--color-blush); color: #fff; border-color: var(--color-blush); }
 .carousel-arrow:disabled { opacity: 0.35; cursor: default; }
 
+@media (max-width: 700px) {
+  .wishes-carousel-wrap { position: relative; gap: 0; }
+  .wishes-page-grid { padding: 0 26px; }
+  .carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 30px; height: 30px;
+    background: rgba(251,247,242,0.95);
+    box-shadow: 0 2px 10px rgba(58,50,44,0.15);
+  }
+  .carousel-arrow.prev { left: -6px; }
+  .carousel-arrow.next { right: -6px; }
+}
+
 .wishes-dots {
   display: flex;
   justify-content: center;
